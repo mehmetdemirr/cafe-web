@@ -4,7 +4,6 @@
     <nav class="w-64 bg-gray-800 p-4">
       <h1 class="text-white text-2xl font-bold mb-6">Fıtı Fıtı</h1>
       <ul>
-        <!-- Aktif bağlantının rengini değiştirmek için "exact-active-class" kullanıyoruz -->
         <li class="mt-4">
           <router-link
             to="/categories"
@@ -67,23 +66,45 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const showProfileMenu = ref(false)
 
+// Menü toggle fonksiyonu
 const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value
 }
 
+// Profil düzenleme işlemi
 const editProfile = () => {
-  // Profil düzenleme işlemleri
   console.log('Profil düzenle')
 }
 
+// Çıkış yapma işlemi
 const logout = () => {
-  // Çıkış yapma işlemleri
-  console.log('Çıkış yap')
+  localStorage.removeItem('authToken')
+  router.push({ name: 'home' })
 }
+
+// Sayfanın herhangi bir yerine tıklandığında menüyü kapat
+const handleOutsideClick = (event) => {
+  // Eğer tıklanan yer menünün kendisi değilse menüyü kapat
+  if (!event.target.closest('.relative')) {
+    showProfileMenu.value = false
+  }
+}
+
+// Mounted olduğunda document'e click event'i ekle
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+})
+
+// Component unmounted olduğunda event listener'ı kaldır
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
 </script>
 
 <style scoped>

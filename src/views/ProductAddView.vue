@@ -45,8 +45,8 @@
           class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-gray-300"
         >
           <option value="" disabled>Sadece bir kategori seçin</option>
-          <option v-for="category in categories" :key="category" :value="category">
-            {{ category }}
+          <option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
           </option>
         </select>
       </div>
@@ -74,62 +74,80 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue'
+import appAxiosClient from '../utils/axios'
 
-export default {
-  setup() {
-    const categories = ['Starters', 'Salads', 'Specialty']
-    const newProduct = ref({
-      name: '',
-      price: null,
-      description: '',
-      category: '',
-      image: ''
-    })
-    const successMessage = ref('')
-    const imagePreview = ref('')
+const categories = ref([]) // Kategorileri saklamak için reaktif değişken
+const newProduct = ref({
+  name: '',
+  price: null,
+  description: '',
+  category: '',
+  image: null
+})
+const successMessage = ref('')
+const imagePreview = ref('')
 
-    const handleFileUpload = (event) => {
-      const file = event.target.files[0]
-      if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          imagePreview.value = e.target.result
-        }
-        reader.readAsDataURL(file)
-        newProduct.value.image = file.name // veya dosya ile ilgili başka bir işlem yapabilirsiniz
-      } else {
-        alert('Lütfen bir resim dosyası seçin.')
-      }
+// Kategorileri API'den çekmek için fonksiyon
+const fetchCategories = async () => {
+  try {
+    const response = await appAxiosClient.get('/menu-categories') // Kategorileri çekerken doğru API'yi kullan
+    categories.value = response.data.data // Kategorileri ayarla
+  } catch (error) {
+    console.error('Kategorileri çekerken hata:', error)
+    alert('Kategoriler alınırken bir hata oluştu.')
+  }
+}
+
+const handleFileUpload = (event) => {
+  const file = event.target.files[0]
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result
     }
+    reader.readAsDataURL(file)
+    newProduct.value.image = file
+  } else {
+    alert('Lütfen bir resim dosyası seçin.')
+  }
+}
 
-    const addProduct = () => {
-      console.log('Yeni Ürün Eklendi:', newProduct.value)
+const addProduct = async () => {
+  const formData = new FormData()
+  formData.append('name', newProduct.value.name)
+  formData.append('price', newProduct.value.price)
+  formData.append('description', newProduct.value.description)
+  formData.append('menu_category_id', newProduct.value.category)
+  formData.append('image', newProduct.value.image)
+
+  try {
+    const response = await appAxiosClient.post('/menu-items', formData) // Ortak axios client ile post işlemi
+    if (response.data.success) {
       successMessage.value = 'Ürün başarıyla eklendi!'
       newProduct.value = {
         name: '',
         price: null,
         description: '',
         category: '',
-        image: ''
+        image: null
       }
       imagePreview.value = ''
       setTimeout(() => {
         successMessage.value = ''
       }, 3000)
+    } else {
+      alert(response.data.message || 'Bir hata oluştu.')
     }
-
-    return {
-      categories,
-      newProduct,
-      addProduct,
-      successMessage,
-      imagePreview,
-      handleFileUpload
-    }
+  } catch (error) {
+    console.error('Ürün eklenirken hata:', error)
+    alert('Bir hata oluştu.')
   }
 }
+
+// Bileşen yüklendiğinde kategorileri getir
+onMounted(fetchCategories)
 </script>
 
 <style scoped>

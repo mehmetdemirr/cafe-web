@@ -26,16 +26,19 @@
       <h3 class="text-xl font-semibold text-gray-300 mb-2">Mevcut Kategoriler</h3>
       <ul class="space-y-2">
         <li
-          v-for="(category, index) in categories"
-          :key="index"
+          v-for="category in categories"
+          :key="category.id"
           class="flex items-center justify-between bg-gray-800 p-2 rounded-md"
         >
-          <span class="text-white">{{ category }}</span>
+          <span class="text-white">{{ category.name }}</span>
           <div>
-            <button @click="editCategory(index)" class="text-yellow-400 hover:text-yellow-300 mr-4">
+            <button
+              @click="editCategory(category)"
+              class="text-yellow-400 hover:text-yellow-300 mr-4"
+            >
               Düzenle
             </button>
-            <button @click="deleteCategory(index)" class="text-red-500 hover:text-red-400">
+            <button @click="deleteCategory(category.id)" class="text-red-500 hover:text-red-400">
               Sil
             </button>
           </div>
@@ -46,30 +49,94 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import appAxiosClient from '../utils/axios'
+import Swal from 'sweetalert2'
 
 const newCategory = ref('')
-const categories = ref([]) // Kategoriler listesini tutacak
+const categories = ref([])
 
-const addCategory = () => {
-  if (newCategory.value.trim()) {
-    categories.value.push(newCategory.value.trim())
+// Kategorileri API'den al
+const fetchCategories = async () => {
+  try {
+    const response = await appAxiosClient.get('/menu-categories')
+    categories.value = response.data.data
+  } catch (error) {
+    console.error('Kategoriler alınamadı:', error)
+  }
+}
+
+// Yeni kategori ekle
+const addCategory = async () => {
+  try {
+    const response = await appAxiosClient.post('/menu-categories', {
+      name: newCategory.value.trim()
+    })
+    categories.value.push(response.data.data) // Eklenen kategoriyi listeye ekle
     newCategory.value = '' // Formu temizle
+  } catch (error) {
+    console.error('Kategori eklenemedi:', error)
   }
 }
 
-const editCategory = (index) => {
-  const updatedCategory = prompt('Yeni kategori adını girin:', categories.value[index])
-  if (updatedCategory) {
-    categories.value[index] = updatedCategory
+// Kategori silme işlemi
+const deleteCategory = async (id) => {
+  try {
+    const result = await Swal.fire({
+      title: 'Bu kategoriyi silmek istediğinize emin misiniz?',
+      text: 'Kategoriye eklediğiniz ürünlerin hepsi silinir ve bu işlem geri alınamaz!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Evet, sil!',
+      cancelButtonText: 'İptal'
+    })
+
+    if (result.isConfirmed) {
+      await appAxiosClient.delete(`/menu-categories/${id}`)
+      categories.value = categories.value.filter((category) => category.id !== id)
+      Swal.fire('Silindi!', 'Kategori başarıyla silindi.', 'success')
+    }
+  } catch (error) {
+    console.error('Kategori silinemedi:', error)
+    Swal.fire('Hata!', 'Kategori silinirken bir hata oluştu.', 'error')
   }
 }
 
-const deleteCategory = (index) => {
-  if (confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) {
-    categories.value.splice(index, 1)
+// Kategori düzenleme işlemi
+const editCategory = async (category) => {
+  const { value: updatedCategoryName } = await Swal.fire({
+    title: 'Kategoriyi Düzenle',
+    input: 'text',
+    inputLabel: 'Kategori Adı',
+    inputValue: category.name,
+    showCancelButton: true,
+    confirmButtonText: 'Kaydet',
+    cancelButtonText: 'İptal',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Kategori adı boş olamaz!'
+      }
+    }
+  })
+
+  if (updatedCategoryName) {
+    try {
+      await appAxiosClient.put(`/menu-categories/${category.id}`, {
+        name: updatedCategoryName
+      })
+      category.name = updatedCategoryName // Listeyi güncelle
+      Swal.fire('Başarılı!', 'Kategori başarıyla güncellendi.', 'success')
+    } catch (error) {
+      console.error('Kategori güncellenemedi:', error)
+      Swal.fire('Hata!', 'Kategori güncellenirken bir hata oluştu.', 'error')
+    }
   }
 }
+
+// Sayfa yüklendiğinde kategorileri al
+onMounted(fetchCategories)
 </script>
 
 <style scoped>

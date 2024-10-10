@@ -47,13 +47,60 @@
 
 <script setup>
 import { ref } from 'vue'
+import appAxiosClient from '../utils/axios'
+import Swal from 'sweetalert2'
+import { useRouter } from 'vue-router'
 
 const email = ref('')
 const password = ref('')
+const router = useRouter()
 
-const handleLogin = () => {
-  // Giriş işlemleri burada yapılacak
-  console.log('Giriş yapılacak:', { email: email.value, password: password.value })
+const handleLogin = async () => {
+  try {
+    const response = await appAxiosClient.post('/auth/login', {
+      email: email.value,
+      password: password.value
+    })
+
+    const { success, data, message, errors } = response.data
+
+    if (success && data.roles.includes('business')) {
+      // Başarılı giriş
+      Swal.fire({
+        icon: 'success',
+        title: 'Giriş Başarılı',
+        text: message,
+        timer: 1500,
+        showConfirmButton: false
+      })
+
+      // Token'ı kaydet
+      localStorage.setItem('authToken', data.token)
+
+      // Ana sayfaya yönlendir
+      router.push({ name: 'home' })
+    } else if (success && data.roles.includes('user')) {
+      // Başarısız giriş
+      Swal.fire({
+        icon: 'error',
+        title: 'Giriş Başarısız',
+        text: 'Buraya sadece işletmeler giriş yapabilir !'
+      })
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Giriş Başarısız',
+        text: message + errors
+      })
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Hata',
+      text: 'Bir hata oluştu, lütfen tekrar deneyin.'
+    })
+    console.error('Login error:', error)
+  }
 }
 </script>
 
