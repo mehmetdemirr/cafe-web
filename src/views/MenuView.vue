@@ -40,7 +40,7 @@
             <div class="flex items-center">
               <h3 class="text-xl font-medium text-white">{{ item.name }}</h3>
               <div class="flex-grow mx-4 border-b border-dotted border-gray-600"></div>
-              <span class="text-xl font-medium text-yellow-500">${{ item.price }}</span>
+              <span class="text-xl font-medium text-yellow-500">₺{{ item.price }}</span>
             </div>
             <p class="text-gray-400 mt-1">{{ item.description }}</p>
           </div>

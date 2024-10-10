@@ -79,7 +79,7 @@ const toggleProfileMenu = () => {
 
 // Profil düzenleme işlemi
 const editProfile = () => {
-  console.log('Profil düzenle')
+  router.push({ path: '/profile-edit' })
 }
 
 // Çıkış yapma işlemi

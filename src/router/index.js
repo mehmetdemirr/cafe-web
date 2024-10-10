@@ -27,6 +27,12 @@ const router = createRouter({
           meta: { layout: TemplateLayout }
         },
         {
+          path: '/products/edit/:id',
+          name: 'productUpdate',
+          component: () => import('../views/ProductUpdateView.vue'),
+          meta: { layout: TemplateLayout }
+        },
+        {
           path: '/reports',
           name: 'reports',
           component: () => import('../views/ReportView.vue'),
@@ -36,6 +42,12 @@ const router = createRouter({
           path: '/products/add',
           name: 'productAdd',
           component: () => import('../views/ProductAddView.vue'),
+          meta: { layout: TemplateLayout }
+        },
+        {
+          path: '/profile-edit',
+          name: 'profileEdit',
+          component: () => import('../views/ProfileEditView.vue'),
           meta: { layout: TemplateLayout }
         }
       ]
