@@ -47,14 +47,21 @@
         />
       </div>
       <div class="mb-4">
-        <label for="website_url" class="block text-gray-200 mb-1">Web Sitesi</label>
+        <label for="website_url" class="block text-gray-200 mb-1"
+          >Web Sitesi <span class="text-red-500">*</span></label
+        >
         <input
           v-model="profile.website_url"
           type="url"
           id="website_url"
           class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-gray-300"
           placeholder="Web site URL'sini girin"
+          required
         />
+        <!-- Hata mesajı için basit bir kontrol -->
+        <p v-if="!profile.website_url && isSubmitted" class="text-red-500 mt-1">
+          Web sitesi adresi zorunludur.
+        </p>
       </div>
       <div class="mb-4">
         <label for="description" class="block text-gray-200 mb-1">Açıklama</label>
